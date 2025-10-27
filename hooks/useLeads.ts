@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Lead, LeadInsert } from '@/types/database';
 import { toast } from 'sonner';
+import { measurePerformance } from '@/lib/performance';
 
 interface LeadsQueryParams {
   status?: string;
@@ -25,33 +26,35 @@ interface LeadsResponse {
  * Fetch leads with optional filters
  */
 async function fetchLeads(params: LeadsQueryParams = {}): Promise<LeadsResponse> {
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) {
-    throw new Error('Not authenticated');
-  }
+  return measurePerformance('fetch-leads', async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('Not authenticated');
+    }
 
-  const queryParams = new URLSearchParams();
-  
-  if (params.status) queryParams.append('status', params.status);
-  if (params.company) queryParams.append('company', params.company);
-  if (params.dateFrom) queryParams.append('dateFrom', params.dateFrom);
-  if (params.dateTo) queryParams.append('dateTo', params.dateTo);
-  if (params.limit) queryParams.append('limit', params.limit.toString());
-  if (params.offset) queryParams.append('offset', params.offset.toString());
+    const queryParams = new URLSearchParams();
+    
+    if (params.status) queryParams.append('status', params.status);
+    if (params.company) queryParams.append('company', params.company);
+    if (params.dateFrom) queryParams.append('dateFrom', params.dateFrom);
+    if (params.dateTo) queryParams.append('dateTo', params.dateTo);
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.offset) queryParams.append('offset', params.offset.toString());
 
-  const response = await fetch(`/api/leads?${queryParams.toString()}`, {
-    headers: {
-      'Authorization': `Bearer ${session.access_token}`,
-    },
-  });
+    const response = await fetch(`/api/leads?${queryParams.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Failed to fetch leads');
-  }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to fetch leads');
+    }
 
-  return response.json();
+    return response.json();
+  }, { filters: Object.keys(params).length });
 }
 
 /**
@@ -103,27 +106,29 @@ export function useLead(id: string | null) {
  * Create a new lead
  */
 async function createLead(data: Omit<LeadInsert, 'user_id'>): Promise<Lead> {
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) {
-    throw new Error('Not authenticated');
-  }
+  return measurePerformance('create-lead', async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('Not authenticated');
+    }
 
-  const response = await fetch('/api/leads', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify(data),
+    const response = await fetch('/api/leads', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to create lead');
+    }
+
+    return response.json();
   });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Failed to create lead');
-  }
-
-  return response.json();
 }
 
 /**
@@ -149,27 +154,29 @@ export function useCreateLead() {
  * Update an existing lead
  */
 async function updateLead({ id, data }: { id: string; data: Partial<Omit<Lead, 'id' | 'created_at' | 'user_id'>> }): Promise<Lead> {
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) {
-    throw new Error('Not authenticated');
-  }
+  return measurePerformance('update-lead', async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('Not authenticated');
+    }
 
-  const response = await fetch(`/api/leads/${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify(data),
-  });
+    const response = await fetch(`/api/leads/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(data),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Failed to update lead');
-  }
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to update lead');
+    }
 
-  return response.json();
+    return response.json();
+  }, { statusChange: !!data.status });
 }
 
 /**
