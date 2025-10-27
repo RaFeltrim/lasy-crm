@@ -364,7 +364,8 @@
     - Verify FCP < 1s, LCP < 2s, TTI < 3s
     - _Requirements: 9.1, 9.2, 9.3, 9.5_
 
-- [-] 13. Security hardening
+- [x] 13. Security hardening
+
 
 
   - [x] 13.1 Implement security headers and HTTPS
@@ -385,7 +386,8 @@
     - _Requirements: 10.4, 10.5_
   
 
-  - [ ] 13.3 Verify RLS and authentication
+  - [x] 13.3 Verify RLS and authentication
+
     - Test RLS policies ensure users can only access their own data
     - Verify authentication middleware blocks unauthenticated requests
     - Test token validation and refresh flows
