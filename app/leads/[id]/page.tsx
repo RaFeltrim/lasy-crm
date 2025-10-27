@@ -1,11 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useLead, useDeleteLead } from '@/hooks/useLeads';
 import { LeadDetail } from '@/components/LeadDetail';
-import { LeadDialog } from '@/components/LeadDialog';
-import { DeleteLeadDialog } from '@/components/DeleteLeadDialog';
+
+// Lazy load dialog components
+const LeadDialog = dynamic(
+  () => import('@/components/LeadDialog').then(mod => ({ default: mod.LeadDialog })),
+  { ssr: false }
+);
+
+const DeleteLeadDialog = dynamic(
+  () => import('@/components/DeleteLeadDialog').then(mod => ({ default: mod.DeleteLeadDialog })),
+  { ssr: false }
+);
 
 export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
