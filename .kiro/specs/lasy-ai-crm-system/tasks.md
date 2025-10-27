@@ -364,14 +364,19 @@
     - Verify FCP < 1s, LCP < 2s, TTI < 3s
     - _Requirements: 9.1, 9.2, 9.3, 9.5_
 
-- [ ] 13. Security hardening
-  - [ ] 13.1 Implement security headers and HTTPS
+- [-] 13. Security hardening
+
+
+  - [x] 13.1 Implement security headers and HTTPS
+
+
     - Add all required security headers in middleware
     - Configure CORS for API endpoints
     - Ensure HTTPS enforcement in production
     - _Requirements: 10.1, 10.2_
   
-  - [ ] 13.2 Add input sanitization and validation
+  - [-] 13.2 Add input sanitization and validation
+
     - Sanitize all user inputs to prevent XSS
     - Use parameterized queries for all database operations
     - Validate all API inputs with Zod schemas

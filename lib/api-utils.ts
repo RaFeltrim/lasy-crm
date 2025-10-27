@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { AppError, AuthenticationError, ErrorResponse } from './errors';
+import { checkRateLimit, getClientIdentifier, getIpAddress, RateLimitConfig, RateLimitResult } from './rate-limit';
 
 /**
  * Create a Supabase client for API routes with the user's session
@@ -91,4 +92,50 @@ export async function validateRequestBody<T>(
     }
     throw error;
   }
+}
+
+/**
+ * Apply rate limiting to an API endpoint
+ * @param request - The incoming request
+ * @param config - Rate limit configuration
+ * @param userId - Optional user ID for authenticated requests
+ * @returns Rate limit result
+ */
+export function applyRateLimit(
+  request: NextRequest,
+  config: RateLimitConfig,
+  userId?: string
+): RateLimitResult {
+  const ipAddress = getIpAddress(request.headers);
+  const identifier = getClientIdentifier(userId, ipAddress);
+  
+  return checkRateLimit(identifier, config);
+}
+
+/**
+ * Create a rate-limited response
+ */
+export function createRateLimitResponse(result: RateLimitResult): NextResponse {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many requests. Please try again later.',
+        details: {
+          limit: result.limit,
+          remaining: result.remaining,
+          reset: result.reset,
+        },
+      },
+    },
+    {
+      status: 429,
+      headers: {
+        'X-RateLimit-Limit': result.limit.toString(),
+        'X-RateLimit-Remaining': result.remaining.toString(),
+        'X-RateLimit-Reset': result.reset.toString(),
+        'Retry-After': Math.ceil((result.reset * 1000 - Date.now()) / 1000).toString(),
+      },
+    }
+  );
 }

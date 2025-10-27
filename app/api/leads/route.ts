@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, validateRequestBody } from '@/lib/api-utils';
+import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, validateRequestBody, applyRateLimit, createRateLimitResponse } from '@/lib/api-utils';
 import { createLeadSchema } from '@/lib/validations/lead';
 import { DatabaseError } from '@/lib/errors';
+import { RateLimitPresets } from '@/lib/rate-limit';
+import { sanitizeLeadInput } from '@/lib/sanitize';
 import type { Lead } from '@/types/database';
 
 /**
@@ -12,22 +14,31 @@ export async function POST(request: NextRequest) {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
     
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.standard, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+    
     // Validate request body
     const data = await validateRequestBody(request, createLeadSchema);
+    
+    // Sanitize input
+    const sanitizedData = sanitizeLeadInput(data);
     
     // Create Supabase client
     const supabase = createServerSupabaseClient(request);
     
-    // Insert lead
+    // Insert lead with sanitized data
     const { data: lead, error } = await supabase
       .from('leads')
       .insert({
-        name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
-        company: data.company || null,
-        status: data.status,
-        notes: data.notes || null,
+        name: sanitizedData.name,
+        email: sanitizedData.email,
+        phone: sanitizedData.phone,
+        company: sanitizedData.company,
+        status: sanitizedData.status,
+        notes: sanitizedData.notes,
         user_id: user.id,
       })
       .select()
