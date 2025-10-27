@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/AuthProvider"
 import { QueryProvider } from "@/components/QueryProvider"
 import { Toaster } from "@/components/ui/sonner"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { WebVitals } from "@/components/WebVitals"
 
 // Optimize font loading with next/font
 const inter = Inter({
@@ -40,6 +41,7 @@ export default function RootLayout({
         <ErrorBoundary>
           <QueryProvider>
             <AuthProvider>
+              <WebVitals />
               {children}
               <Toaster />
             </AuthProvider>
