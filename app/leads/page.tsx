@@ -1,15 +1,29 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Plus, Upload } from 'lucide-react';
 import { useLeads, useDeleteLead } from '@/hooks/useLeads';
 import { Button } from '@/components/ui/button';
 import { LeadList } from '@/components/LeadList';
-import { LeadDialog } from '@/components/LeadDialog';
-import { DeleteLeadDialog } from '@/components/DeleteLeadDialog';
-import { ImportDialog } from '@/components/ImportDialog';
 import { ExportButton } from '@/components/ExportButton';
 import type { Lead } from '@/types/database';
+
+// Lazy load dialog components
+const LeadDialog = dynamic(
+  () => import('@/components/LeadDialog').then(mod => ({ default: mod.LeadDialog })),
+  { ssr: false }
+);
+
+const DeleteLeadDialog = dynamic(
+  () => import('@/components/DeleteLeadDialog').then(mod => ({ default: mod.DeleteLeadDialog })),
+  { ssr: false }
+);
+
+const ImportDialog = dynamic(
+  () => import('@/components/ImportDialog').then(mod => ({ default: mod.ImportDialog })),
+  { ssr: false }
+);
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

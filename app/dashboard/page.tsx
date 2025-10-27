@@ -1,12 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Upload } from 'lucide-react';
-import { KanbanBoardContainer } from '@/components/KanbanBoardContainer';
-import { ImportDialog } from '@/components/ImportDialog';
 import { ExportButton } from '@/components/ExportButton';
 import { Button } from '@/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
+
+// Lazy load heavy components with loading states
+const KanbanBoardContainer = dynamic(
+  () => import('@/components/KanbanBoardContainer').then(mod => ({ default: mod.KanbanBoardContainer })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-pulse text-muted-foreground">Loading board...</div>
+      </div>
+    ),
+    ssr: false
+  }
+);
+
+const ImportDialog = dynamic(
+  () => import('@/components/ImportDialog').then(mod => ({ default: mod.ImportDialog })),
+  {
+    ssr: false
+  }
+);
 
 export default function DashboardPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
