@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, getAuthenticatedUser, handleApiError } from '@/lib/api-utils';
+import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, applyRateLimit, createRateLimitResponse } from '@/lib/api-utils';
 import { DatabaseError } from '@/lib/errors';
+import { RateLimitPresets } from '@/lib/rate-limit';
+import { sanitizeString } from '@/lib/sanitize';
 
 /**
  * GET /api/leads/search - Search and filter leads
@@ -18,14 +20,20 @@ export async function GET(request: NextRequest) {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
     
+    // Apply rate limiting (stricter for search)
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.search, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+    
     // Create Supabase client
     const supabase = createServerSupabaseClient(request);
     
-    // Parse query parameters
+    // Parse and sanitize query parameters
     const { searchParams } = new URL(request.url);
-    const searchQuery = searchParams.get('query');
+    const searchQuery = sanitizeString(searchParams.get('query'));
     const status = searchParams.get('status');
-    const company = searchParams.get('company');
+    const company = sanitizeString(searchParams.get('company'));
     const dateFrom = searchParams.get('dateFrom');
     const dateTo = searchParams.get('dateTo');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);

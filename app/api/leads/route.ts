@@ -70,6 +70,12 @@ export async function GET(request: NextRequest) {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
     
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.standard, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+    
     // Create Supabase client
     const supabase = createServerSupabaseClient(request);
     

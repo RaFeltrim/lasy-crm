@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, validateRequestBody } from '@/lib/api-utils';
+import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, validateRequestBody, applyRateLimit, createRateLimitResponse } from '@/lib/api-utils';
 import { createInteractionSchema } from '@/lib/validations/interaction';
 import { DatabaseError, NotFoundError } from '@/lib/errors';
+import { RateLimitPresets } from '@/lib/rate-limit';
+import { sanitizeInteractionInput } from '@/lib/sanitize';
 import type { Interaction } from '@/types/database';
 
 /**
@@ -12,8 +14,17 @@ export async function POST(request: NextRequest) {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
     
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.standard, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+    
     // Validate request body
     const data = await validateRequestBody(request, createInteractionSchema);
+    
+    // Sanitize input
+    const sanitizedData = sanitizeInteractionInput(data);
     
     // Create Supabase client
     const supabase = createServerSupabaseClient(request);
@@ -22,7 +33,7 @@ export async function POST(request: NextRequest) {
     const { data: lead, error: leadError } = await supabase
       .from('leads')
       .select('id')
-      .eq('id', data.lead_id)
+      .eq('id', sanitizedData.lead_id)
       .eq('user_id', user.id)
       .single();
     
@@ -30,13 +41,13 @@ export async function POST(request: NextRequest) {
       throw new NotFoundError('Lead');
     }
     
-    // Insert interaction
+    // Insert interaction with sanitized data
     const { data: interaction, error } = await supabase
       .from('interactions')
       .insert({
-        lead_id: data.lead_id,
-        type: data.type,
-        description: data.description,
+        lead_id: sanitizedData.lead_id,
+        type: sanitizedData.type,
+        description: sanitizedData.description,
         user_id: user.id,
       } as any)
       .select()
@@ -62,6 +73,12 @@ export async function GET(request: NextRequest) {
   try {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
+    
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.standard, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
     
     // Create Supabase client
     const supabase = createServerSupabaseClient(request);

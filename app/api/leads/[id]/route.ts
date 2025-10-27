@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, validateRequestBody } from '@/lib/api-utils';
+import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, validateRequestBody, applyRateLimit, createRateLimitResponse } from '@/lib/api-utils';
 import { updateLeadSchema } from '@/lib/validations/lead';
 import { DatabaseError, NotFoundError } from '@/lib/errors';
+import { RateLimitPresets } from '@/lib/rate-limit';
+import { sanitizeLeadInput } from '@/lib/sanitize';
 
 /**
  * GET /api/leads/[id] - Fetch a single lead by ID
@@ -13,6 +15,12 @@ export async function GET(
   try {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
+    
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.standard, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
     
     // Create Supabase client
     const supabase = createServerSupabaseClient(request);
@@ -46,8 +54,17 @@ export async function PATCH(
     // Authenticate user
     const user = await getAuthenticatedUser(request);
     
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.standard, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+    
     // Validate request body
     const data = await validateRequestBody(request, updateLeadSchema);
+    
+    // Sanitize input
+    const sanitizedData = sanitizeLeadInput(data);
     
     // Create Supabase client
     const supabase = createServerSupabaseClient(request);
@@ -63,12 +80,12 @@ export async function PATCH(
     };
     
     const updateData: LeadUpdate = {};
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.email !== undefined) updateData.email = data.email || null;
-    if (data.phone !== undefined) updateData.phone = data.phone || null;
-    if (data.company !== undefined) updateData.company = data.company || null;
-    if (data.status !== undefined) updateData.status = data.status;
-    if (data.notes !== undefined) updateData.notes = data.notes || null;
+    if (sanitizedData.name !== undefined) updateData.name = sanitizedData.name;
+    if (sanitizedData.email !== undefined) updateData.email = sanitizedData.email;
+    if (sanitizedData.phone !== undefined) updateData.phone = sanitizedData.phone;
+    if (sanitizedData.company !== undefined) updateData.company = sanitizedData.company;
+    if (sanitizedData.status !== undefined) updateData.status = sanitizedData.status;
+    if (sanitizedData.notes !== undefined) updateData.notes = sanitizedData.notes;
 
     const { data: lead, error } = await (supabase as any)
       .from('leads')
@@ -112,6 +129,12 @@ export async function DELETE(
   try {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
+    
+    // Apply rate limiting
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.standard, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
     
     // Create Supabase client
     const supabase = createServerSupabaseClient(request);
