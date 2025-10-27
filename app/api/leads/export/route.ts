@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, getAuthenticatedUser, handleApiError } from '@/lib/api-utils';
+import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, applyRateLimit, createRateLimitResponse } from '@/lib/api-utils';
 import { DatabaseError } from '@/lib/errors';
+import { RateLimitPresets } from '@/lib/rate-limit';
 import * as XLSX from 'xlsx';
 import type { Lead } from '@/types/database';
 
@@ -87,6 +88,12 @@ export async function GET(request: NextRequest) {
   try {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
+    
+    // Apply rate limiting (stricter for bulk operations)
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.bulk, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
     
     // Parse query parameters
     const { searchParams } = new URL(request.url);

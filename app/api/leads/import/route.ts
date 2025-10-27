@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient, getAuthenticatedUser, handleApiError } from '@/lib/api-utils';
+import { createServerSupabaseClient, getAuthenticatedUser, handleApiError, applyRateLimit, createRateLimitResponse } from '@/lib/api-utils';
 import { DatabaseError, ValidationError } from '@/lib/errors';
 import { leadSchema } from '@/lib/validations/lead';
+import { RateLimitPresets } from '@/lib/rate-limit';
+import { sanitizeLeadInput } from '@/lib/sanitize';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
 import * as XLSX from 'xlsx';
@@ -99,6 +101,12 @@ export async function POST(request: NextRequest) {
     // Authenticate user
     const user = await getAuthenticatedUser(request);
     
+    // Apply rate limiting (stricter for bulk operations)
+    const rateLimitResult = applyRateLimit(request, RateLimitPresets.bulk, user.id);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult);
+    }
+    
     // Parse form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -159,8 +167,10 @@ export async function POST(request: NextRequest) {
       const validation = validateRow(row, rowNumber);
       
       if (validation.valid && validation.data) {
+        // Sanitize the validated data
+        const sanitizedData = sanitizeLeadInput(validation.data);
         validLeads.push({
-          ...validation.data,
+          ...sanitizedData,
           user_id: user.id,
         });
       } else if (validation.errors) {
