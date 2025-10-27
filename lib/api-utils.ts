@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
-import { AppError, AuthenticationError, ErrorResponse } from './errors';
+import { AppError, AuthenticationError, ErrorResponse, logError, ErrorContext } from './errors';
 import { checkRateLimit, getClientIdentifier, getIpAddress, RateLimitConfig, RateLimitResult } from './rate-limit';
 
 /**
@@ -39,8 +39,13 @@ export async function getAuthenticatedUser(request: NextRequest) {
 /**
  * Handle API errors and return appropriate responses
  */
-export function handleApiError(error: unknown): NextResponse<ErrorResponse> {
-  console.error('API Error:', error);
+export function handleApiError(error: unknown, context?: ErrorContext): NextResponse<ErrorResponse> {
+  // Log error with context
+  if (error instanceof Error) {
+    logError(error, context);
+  } else {
+    console.error('Non-Error object thrown:', error, 'Context:', context);
+  }
   
   if (error instanceof AppError) {
     return NextResponse.json(
@@ -55,12 +60,12 @@ export function handleApiError(error: unknown): NextResponse<ErrorResponse> {
     );
   }
   
-  // Unknown error
+  // Unknown error - don't expose internal details
   return NextResponse.json(
     {
       error: {
         code: 'INTERNAL_ERROR',
-        message: 'An unexpected error occurred',
+        message: 'An unexpected error occurred. Please try again.',
       },
     },
     { status: 500 }
