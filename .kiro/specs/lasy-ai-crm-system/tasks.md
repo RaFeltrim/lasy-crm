@@ -418,7 +418,8 @@
     - Show retry options for failed network requests
     - _Requirements: 11.2, 11.3, 11.4_
 
-- [ ] 15. Testing and quality assurance
+- [-] 15. Testing and quality assurance
+
 
   - [ ] 15.1 Write unit tests for core functionality
     - Test Zod validation schemas
