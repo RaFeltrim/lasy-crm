@@ -91,14 +91,13 @@ export function useCreateInteraction() {
     onSuccess: (newInteraction) => {
       // Invalidate and refetch interactions for this lead
       queryClient.invalidateQueries({ queryKey: ['interactions', newInteraction.lead_id] });
-      toast.success('Interaction added successfully', 'The interaction has been recorded');
+      toast.success('Interaction added successfully', { description: 'The interaction has been recorded' });
     },
     onError: (error: Error) => {
       const isRetryable = isRetryableError(error);
-      toast.error(
-        error.message || 'Failed to add interaction',
-        isRetryable ? 'Please try again' : undefined
-      );
+      toast.error(error.message || 'Failed to add interaction', { 
+        description: isRetryable ? 'Please try again' : undefined 
+      });
     },
     retry: (failureCount, error) => {
       if (failureCount < 2 && isRetryableError(error)) {

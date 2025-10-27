@@ -72,14 +72,13 @@ export function ExportButton({ variant = 'outline', size = 'default' }: ExportBu
         }
       );
 
-      toast.success(`Leads exported successfully as ${format.toUpperCase()}`, 'Your file has been downloaded');
+      toast.success(`Leads exported successfully as ${format.toUpperCase()}`, { description: 'Your file has been downloaded' });
     } catch (error) {
       console.error('Export error:', error);
       const isRetryable = isRetryableError(error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to export leads',
-        isRetryable ? 'Please try again' : undefined
-      );
+      toast.error(error instanceof Error ? error.message : 'Failed to export leads', { 
+        description: isRetryable ? 'Please try again' : undefined 
+      });
     } finally {
       setIsExporting(false);
     }

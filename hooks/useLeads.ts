@@ -158,14 +158,13 @@ export function useCreateLead() {
     onSuccess: (newLead) => {
       // Invalidate and refetch leads
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead created successfully', 'The lead has been added to your pipeline');
+      toast.success('Lead created successfully', { description: 'The lead has been added to your pipeline' });
     },
     onError: (error: Error) => {
       const isRetryable = isRetryableError(error);
-      toast.error(
-        error.message || 'Failed to create lead',
-        isRetryable ? 'Please try again' : undefined
-      );
+      toast.error(error.message || 'Failed to create lead', { 
+        description: isRetryable ? 'Please try again' : undefined 
+      });
     },
     retry: (failureCount, error) => {
       if (failureCount < 2 && isRetryableError(error)) {
@@ -249,15 +248,14 @@ export function useUpdateLead() {
         queryClient.setQueryData(['leads', variables.id], context.previousLead);
       }
       const isRetryable = isRetryableError(error);
-      toast.error(
-        error.message || 'Failed to update lead',
-        isRetryable ? 'Please try again' : undefined
-      );
+      toast.error(error.message || 'Failed to update lead', { 
+        description: isRetryable ? 'Please try again' : undefined 
+      });
     },
     onSuccess: (updatedLead) => {
       // Invalidate to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead updated successfully', 'Changes have been saved');
+      toast.success('Lead updated successfully', { description: 'Changes have been saved' });
     },
     retry: (failureCount, error) => {
       if (failureCount < 2 && isRetryableError(error)) {
@@ -324,15 +322,14 @@ export function useDeleteLead() {
         queryClient.setQueryData(['leads'], context.previousLeads);
       }
       const isRetryable = isRetryableError(error);
-      toast.error(
-        error.message || 'Failed to delete lead',
-        isRetryable ? 'Please try again' : undefined
-      );
+      toast.error(error.message || 'Failed to delete lead', { 
+        description: isRetryable ? 'Please try again' : undefined 
+      });
     },
     onSuccess: () => {
       // Invalidate to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead deleted successfully', 'The lead has been removed from your pipeline');
+      toast.success('Lead deleted successfully', { description: 'The lead has been removed from your pipeline' });
     },
     retry: (failureCount, error) => {
       if (failureCount < 2 && isRetryableError(error)) {
