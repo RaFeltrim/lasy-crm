@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Lead, LeadStatus } from '@/types/database';
+import { isRetryableError } from '@/lib/retry';
 
 export interface SearchParams {
   query?: string;
@@ -74,5 +75,12 @@ export function useLeadSearch(params: SearchParams) {
       params.dateTo
     ),
     staleTime: 30000, // 30 seconds
+    retry: (failureCount, error) => {
+      if (failureCount < 2 && isRetryableError(error)) {
+        return true;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 5000),
   });
 }

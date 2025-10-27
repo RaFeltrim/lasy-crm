@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Interaction, InteractionInsert } from '@/types/database';
 import { toast } from 'sonner';
+import { isRetryableError } from '@/lib/retry';
 
 interface InteractionsResponse {
   interactions: Interaction[];
@@ -42,6 +43,13 @@ export function useInteractions(leadId: string | null) {
     queryKey: ['interactions', leadId],
     queryFn: () => fetchInteractions(leadId!),
     enabled: !!leadId,
+    retry: (failureCount, error) => {
+      if (failureCount < 2 && isRetryableError(error)) {
+        return true;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 5000),
   });
 }
 
@@ -83,10 +91,20 @@ export function useCreateInteraction() {
     onSuccess: (newInteraction) => {
       // Invalidate and refetch interactions for this lead
       queryClient.invalidateQueries({ queryKey: ['interactions', newInteraction.lead_id] });
-      toast.success('Interaction added successfully');
+      toast.success('Interaction added successfully', 'The interaction has been recorded');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to add interaction');
+      const isRetryable = isRetryableError(error);
+      toast.error(
+        error.message || 'Failed to add interaction',
+        isRetryable ? 'Please try again' : undefined
+      );
+    },
+    retry: (failureCount, error) => {
+      if (failureCount < 2 && isRetryableError(error)) {
+        return true;
+      }
+      return false;
     },
   });
 }

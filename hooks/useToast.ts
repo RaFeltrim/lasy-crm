@@ -1,24 +1,46 @@
 import { toast } from "sonner"
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export function useToast() {
   return {
     success: (message: string, description?: string) => {
-      toast.success(message, { description })
+      toast.success(message, { description, duration: 3000 })
     },
-    error: (message: string, description?: string) => {
-      toast.error(message, { description })
+    error: (message: string, description?: string, action?: ToastAction) => {
+      toast.error(message, { 
+        description,
+        duration: 5000,
+        action: action ? {
+          label: action.label,
+          onClick: action.onClick,
+        } : undefined,
+      })
     },
     info: (message: string, description?: string) => {
-      toast.info(message, { description })
+      toast.info(message, { description, duration: 4000 })
     },
     warning: (message: string, description?: string) => {
-      toast.warning(message, { description })
+      toast.warning(message, { description, duration: 4000 })
     },
     loading: (message: string) => {
       return toast.loading(message)
     },
     dismiss: (toastId?: string | number) => {
       toast.dismiss(toastId)
+    },
+    promise: <T,>(
+      promise: Promise<T>,
+      messages: {
+        loading: string;
+        success: string | ((data: T) => string);
+        error: string | ((error: Error) => string);
+      }
+    ) => {
+      return toast.promise(promise, messages)
     },
   }
 }

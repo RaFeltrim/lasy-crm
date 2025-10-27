@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import type { Lead, LeadInsert } from '@/types/database';
 import { toast } from 'sonner';
 import { measurePerformance } from '@/lib/performance';
+import { retryWithBackoff, isRetryableError } from '@/lib/retry';
 
 interface LeadsQueryParams {
   status?: string;
@@ -64,6 +65,14 @@ export function useLeads(params: LeadsQueryParams = {}) {
   return useQuery({
     queryKey: ['leads', params],
     queryFn: () => fetchLeads(params),
+    retry: (failureCount, error) => {
+      // Retry up to 2 times for retryable errors
+      if (failureCount < 2 && isRetryableError(error)) {
+        return true;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 5000),
   });
 }
 
@@ -99,6 +108,13 @@ export function useLead(id: string | null) {
     queryKey: ['leads', id],
     queryFn: () => fetchLead(id!),
     enabled: !!id,
+    retry: (failureCount, error) => {
+      if (failureCount < 2 && isRetryableError(error)) {
+        return true;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 5000),
   });
 }
 
@@ -142,10 +158,20 @@ export function useCreateLead() {
     onSuccess: (newLead) => {
       // Invalidate and refetch leads
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead created successfully');
+      toast.success('Lead created successfully', 'The lead has been added to your pipeline');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create lead');
+      const isRetryable = isRetryableError(error);
+      toast.error(
+        error.message || 'Failed to create lead',
+        isRetryable ? 'Please try again' : undefined
+      );
+    },
+    retry: (failureCount, error) => {
+      if (failureCount < 2 && isRetryableError(error)) {
+        return true;
+      }
+      return false;
     },
   });
 }
@@ -222,12 +248,22 @@ export function useUpdateLead() {
       if (context?.previousLead) {
         queryClient.setQueryData(['leads', variables.id], context.previousLead);
       }
-      toast.error(error.message || 'Failed to update lead');
+      const isRetryable = isRetryableError(error);
+      toast.error(
+        error.message || 'Failed to update lead',
+        isRetryable ? 'Please try again' : undefined
+      );
     },
     onSuccess: (updatedLead) => {
       // Invalidate to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead updated successfully');
+      toast.success('Lead updated successfully', 'Changes have been saved');
+    },
+    retry: (failureCount, error) => {
+      if (failureCount < 2 && isRetryableError(error)) {
+        return true;
+      }
+      return false;
     },
   });
 }
@@ -287,12 +323,22 @@ export function useDeleteLead() {
       if (context?.previousLeads) {
         queryClient.setQueryData(['leads'], context.previousLeads);
       }
-      toast.error(error.message || 'Failed to delete lead');
+      const isRetryable = isRetryableError(error);
+      toast.error(
+        error.message || 'Failed to delete lead',
+        isRetryable ? 'Please try again' : undefined
+      );
     },
     onSuccess: () => {
       // Invalidate to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead deleted successfully');
+      toast.success('Lead deleted successfully', 'The lead has been removed from your pipeline');
+    },
+    retry: (failureCount, error) => {
+      if (failureCount < 2 && isRetryableError(error)) {
+        return true;
+      }
+      return false;
     },
   });
 }
