@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-10-28T03:08:55.159Z",
+  "metrics": [
+    {
+      "name": "Total Bundle Size",
+      "value": 1.6869945526123047,
+      "target": 5,
+      "unit": "MB",
+      "status": "PASS"
+    },
+    {
+      "name": "FCP Target",
+      "value": 1000,
+      "target": 1000,
+      "unit": "ms",
+      "status": "PASS"
+    },
+    {
+      "name": "LCP Target",
+      "value": 2000,
+      "target": 2000,
+      "unit": "ms",
+      "status": "PASS"
+    },
+    {
+      "name": "TTI Target",
+      "value": 3000,
+      "target": 3000,
+      "unit": "ms",
+      "status": "PASS"
+    },
+    {
+      "name": "CLS Target",
+      "value": 0.1,
+      "target": 0.1,
+      "unit": "score",
+      "status": "PASS"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "warnings": 0
+  }
+}

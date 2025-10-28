@@ -1,0 +1,119 @@
+{
+  "timestamp": "2025-10-28T03:08:18.710Z",
+  "summary": {
+    "passed": 15,
+    "failed": 1,
+    "warnings": 2,
+    "total": 18
+  },
+  "checks": [
+    {
+      "category": "Authentication",
+      "check": "Auth middleware implemented",
+      "status": "FAIL",
+      "details": "Auth validation not found in middleware"
+    },
+    {
+      "category": "Authentication",
+      "check": "Security headers configured",
+      "status": "PASS",
+      "details": "Security headers present in middleware"
+    },
+    {
+      "category": "Authentication",
+      "check": "Auth utilities implemented",
+      "status": "PASS",
+      "details": "Auth utilities file exists"
+    },
+    {
+      "category": "RLS",
+      "check": "RLS policies defined",
+      "status": "WARNING",
+      "details": "No RLS policy files found"
+    },
+    {
+      "category": "API Security",
+      "check": "API routes exist",
+      "status": "PASS",
+      "details": "API directory found"
+    },
+    {
+      "category": "API Security",
+      "check": "Input validation schemas",
+      "status": "PASS",
+      "details": "Found 3 validation schemas"
+    },
+    {
+      "category": "API Security",
+      "check": "Rate limiting implemented",
+      "status": "PASS",
+      "details": "Rate limit utilities found"
+    },
+    {
+      "category": "Input Sanitization",
+      "check": "Sanitization utilities exist",
+      "status": "PASS",
+      "details": "Sanitization module found"
+    },
+    {
+      "category": "Input Sanitization",
+      "check": "XSS protection",
+      "status": "PASS",
+      "details": "XSS sanitization implemented"
+    },
+    {
+      "category": "Security Headers",
+      "check": "X-Frame-Options",
+      "status": "PASS",
+      "details": "X-Frame-Options header configured"
+    },
+    {
+      "category": "Security Headers",
+      "check": "X-Content-Type-Options",
+      "status": "PASS",
+      "details": "X-Content-Type-Options header configured"
+    },
+    {
+      "category": "Security Headers",
+      "check": "Referrer-Policy",
+      "status": "PASS",
+      "details": "Referrer-Policy header configured"
+    },
+    {
+      "category": "Security Headers",
+      "check": "X-XSS-Protection",
+      "status": "PASS",
+      "details": "X-XSS-Protection header configured"
+    },
+    {
+      "category": "Environment",
+      "check": "NEXT_PUBLIC_SUPABASE_URL documented",
+      "status": "PASS",
+      "details": "Variable documented in .env.example"
+    },
+    {
+      "category": "Environment",
+      "check": "NEXT_PUBLIC_SUPABASE_ANON_KEY documented",
+      "status": "PASS",
+      "details": "Variable documented in .env.example"
+    },
+    {
+      "category": "Environment",
+      "check": ".env files ignored",
+      "status": "PASS",
+      "details": ".env files are in .gitignore"
+    },
+    {
+      "category": "Dependencies",
+      "check": "package.json exists",
+      "status": "PASS",
+      "details": "Package file found"
+    },
+    {
+      "category": "Dependencies",
+      "check": "Vulnerability scan",
+      "status": "WARNING",
+      "details": "Run \"npm audit\" for detailed vulnerability report"
+    }
+  ]
+}

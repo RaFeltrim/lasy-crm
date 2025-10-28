@@ -6,6 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { LeadCard } from '@/components/LeadCard';
 import type { Lead } from '@/types/database';
 
+interface EnhancedLead extends Lead {
+  highlightedName?: React.ReactNode;
+  highlightedEmail?: React.ReactNode;
+  highlightedCompany?: React.ReactNode;
+  highlightedNotes?: React.ReactNode;
+}
+
 interface SearchResultsProps {
   leads: Lead[];
   isLoading: boolean;
@@ -41,7 +48,7 @@ export function SearchResults({
   total,
 }: SearchResultsProps) {
   // Create enhanced leads with highlighted text
-  const enhancedLeads = useMemo(() => {
+  const enhancedLeads = useMemo((): EnhancedLead[] => {
     if (!searchQuery) return leads;
     
     return leads.map(lead => ({

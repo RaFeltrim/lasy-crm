@@ -589,3 +589,94 @@ NEXT_PUBLIC_APP_URL=<app-url>
 - API error logging
 - User-friendly error messages
 - Error rate alerts
+
+## Type Safety and TypeScript Configuration
+
+### TypeScript Compiler Configuration
+
+The project requires specific TypeScript compiler options to support modern features and proper type checking:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "downlevelIteration": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true
+  }
+}
+```
+
+Key configuration requirements:
+- **downlevelIteration**: Required for spreading Sets and Maps when targeting ES5/ES2015
+- **target**: ES2015 or higher for native Set/Map support
+- **strict**: Enabled for maximum type safety
+
+### Supabase Type Integration
+
+The Supabase client must be properly typed to ensure type safety for database operations:
+
+```typescript
+// Database type definition
+export interface Database {
+  public: {
+    Tables: {
+      leads: {
+        Row: Lead;
+        Insert: Omit<Lead, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Lead, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;
+      };
+      interactions: {
+        Row: Interaction;
+        Insert: Omit<Interaction, 'id' | 'created_at'>;
+        Update: Partial<Omit<Interaction, 'id' | 'created_at' | 'user_id'>>;
+      };
+    };
+  };
+}
+
+// Typed Supabase client
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+```
+
+### Component Type Safety
+
+Components that transform data for display must properly extend types:
+
+```typescript
+// For search results with highlighted text
+interface EnhancedLead extends Lead {
+  highlightedName?: React.ReactNode;
+  highlightedEmail?: React.ReactNode;
+  highlightedCompany?: React.ReactNode;
+  highlightedNotes?: React.ReactNode;
+}
+```
+
+### Zod Schema Configuration
+
+Zod enum schemas require proper configuration for custom error messages:
+
+```typescript
+// Correct: Use message property instead of errorMap
+type: z.enum(['call', 'email', 'meeting', 'note', 'other'], {
+  message: 'Type must be one of: call, email, meeting, note, other'
+})
+```
+
+### Known Type Issues and Solutions
+
+1. **Supabase Insert/Update Types**: Ensure Database interface properly defines Insert and Update types for each table
+2. **Set Iteration**: Enable `downlevelIteration` in tsconfig.json for spreading Sets
+3. **Component Props**: Define explicit interfaces for enhanced data structures used in components
+4. **Zod Enums**: Use `message` property instead of `errorMap` for simple error messages
