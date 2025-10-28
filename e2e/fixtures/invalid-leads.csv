@@ -1,0 +1,3 @@
+name,email,phone,company,status,notes
+,invalid-email,abc-def,Test Co,invalid-status,Notes
+Missing Name,test@example.com,+1-234-567-8900,Valid Co,new,Valid lead
