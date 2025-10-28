@@ -1,34 +1,38 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next()
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
   // Add comprehensive security headers
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'origin-when-cross-origin')
   response.headers.set('X-XSS-Protection', '1; mode=block')
-  
+
   // Content Security Policy
   response.headers.set(
     'Content-Security-Policy',
     "default-src 'self'; " +
     "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
-    "style-src 'self' 'unsafe-inline'; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "img-src 'self' data: https:; " +
-    "font-src 'self' data:; " +
+    "font-src 'self' data: https://fonts.gstatic.com; " +
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co; " +
     "frame-ancestors 'none';"
   )
-  
+
   // Permissions Policy (formerly Feature Policy)
   response.headers.set(
     'Permissions-Policy',
     'camera=(), microphone=(), geolocation=(), interest-cohort=()'
   )
-  
+
   // Add HSTS header for production (enforce HTTPS)
   if (process.env.NODE_ENV === 'production') {
     response.headers.set(
@@ -36,19 +40,19 @@ export async function middleware(request: NextRequest) {
       'max-age=31536000; includeSubDomains; preload'
     )
   }
-  
+
   // CORS headers for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const origin = request.headers.get('origin')
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
       process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     ]
-    
+
     if (origin && allowedOrigins.includes(origin)) {
       response.headers.set('Access-Control-Allow-Origin', origin)
       response.headers.set('Access-Control-Allow-Credentials', 'true')
     }
-    
+
     response.headers.set(
       'Access-Control-Allow-Methods',
       'GET, POST, PATCH, DELETE, OPTIONS'
@@ -58,7 +62,7 @@ export async function middleware(request: NextRequest) {
       'Content-Type, Authorization'
     )
     response.headers.set('Access-Control-Max-Age', '86400')
-    
+
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, { status: 204, headers: response.headers })
@@ -76,16 +80,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Skip auth check for public routes
-  const publicRoutes = ['/login']
-  const isPublicRoute = publicRoutes.some(route => 
+  const publicRoutes = ['/login', '/register']
+  const isPublicRoute = publicRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   )
-  
-  // Redirect root to dashboard
-  if (request.nextUrl.pathname === '/') {
-    const redirectUrl = new URL('/dashboard', request.url)
-    return NextResponse.redirect(redirectUrl)
-  }
 
   if (isPublicRoute) {
     return response
@@ -95,18 +93,32 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-  // Create a Supabase client with the request cookies
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      storage: {
-        getItem: (key: string) => {
-          return request.cookies.get(key)?.value ?? null
+  // Create a Supabase client with proper cookie handling
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
         },
-        setItem: () => {},
-        removeItem: () => {},
+        set(name: string, value: string, options: any) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: any) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
       },
-    },
-  })
+    }
+  )
 
   const {
     data: { session },
@@ -115,6 +127,12 @@ export async function middleware(request: NextRequest) {
   // Redirect to login if not authenticated
   if (!session) {
     const redirectUrl = new URL('/login', request.url)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Redirect root to dashboard only if authenticated
+  if (request.nextUrl.pathname === '/') {
+    const redirectUrl = new URL('/dashboard', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 

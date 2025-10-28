@@ -552,7 +552,9 @@
 
 
 
-  - [ ] 18.1 Update TypeScript configuration for modern features
+  - [x] 18.1 Update TypeScript configuration for modern features
+
+
     - Add `downlevelIteration: true` to tsconfig.json to support Set/Map spreading
     - Set `target` to ES2015 or higher for native Set/Map support
     - Verify all compiler options are properly configured
@@ -560,7 +562,9 @@
     - _Requirements: 13.1, 13.3_
 
   
-  - [x] 18.2 Fix Supabase type definitions and database operations
+  - [ ] 18.2 Fix Supabase type definitions and database operations
+
+
 
     - Verify Database interface properly defines Row, Insert, and Update types for leads table
     - Verify Database interface properly defines Row, Insert, and Update types for interactions table

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,11 +11,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/useToast'
 import Link from 'next/link'
 
-interface LoginFormProps {
+const registerSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+})
+
+type RegisterFormData = z.infer<typeof registerSchema>
+
+interface RegisterFormProps {
   onSubmit: (email: string, password: string) => Promise<void>
 }
 
-export function LoginForm({ onSubmit }: LoginFormProps) {
+export function RegisterForm({ onSubmit }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { success, error: showError } = useToast()
@@ -24,21 +35,21 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
   })
 
-  const handleFormSubmit = async (data: LoginFormData) => {
+  const handleFormSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
     setError(null)
 
     try {
       await onSubmit(data.email, data.password)
-      success('Welcome back!', 'You have successfully signed in.')
+      success('Account created!', 'Please check your email to verify your account.')
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred during login'
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during registration'
       setError(errorMessage)
-      showError('Login failed', errorMessage)
+      showError('Registration failed', errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -47,8 +58,8 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Welcome Back</CardTitle>
-        <CardDescription>Sign in to your CRM account</CardDescription>
+        <CardTitle>Create Account</CardTitle>
+        <CardDescription>Sign up for a new CRM account</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
@@ -82,6 +93,21 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              {...register('confirmPassword')}
+              disabled={isLoading}
+              className={errors.confirmPassword ? 'border-red-500' : ''}
+            />
+            {errors.confirmPassword && (
+              <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+
           {error && (
             <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-md">
               {error}
@@ -89,13 +115,13 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Creating account...' : 'Sign Up'}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-primary hover:underline">
-              Sign up
+            Already have an account?{' '}
+            <Link href="/login" className="text-primary hover:underline">
+              Sign in
             </Link>
           </div>
         </form>
