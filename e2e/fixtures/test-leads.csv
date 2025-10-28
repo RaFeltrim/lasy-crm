@@ -1,0 +1,4 @@
+name,email,phone,company,status,notes
+John Doe,john@example.com,+1-234-567-8900,Acme Corp,new,Interested in product
+Jane Smith,jane@example.com,+1-234-567-8901,Tech Inc,contacted,Follow up next week
+Bob Johnson,bob@example.com,+1-234-567-8902,StartupXYZ,qualified,Ready to close

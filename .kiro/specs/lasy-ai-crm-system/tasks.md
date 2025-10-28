@@ -418,24 +418,32 @@
     - Show retry options for failed network requests
     - _Requirements: 11.2, 11.3, 11.4_
 
-- [-] 15. Testing and quality assurance
+- [x] 15. Testing and quality assurance
 
 
-  - [ ] 15.1 Write unit tests for core functionality
+
+
+  - [x] 15.1 Write unit tests for core functionality
+
+
     - Test Zod validation schemas
     - Test custom hooks (useAuth, useLeads, etc.)
     - Test utility functions
     - Test state management logic
     - _Requirements: All requirements_
   
-  - [ ] 15.2 Write integration tests for API endpoints
+  - [x] 15.2 Write integration tests for API endpoints
+
+
     - Test lead CRUD operations
     - Test search and filter functionality
     - Test import/export operations
     - Test interaction creation
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 5.1, 5.2, 5.3, 5.4, 5.5, 6.2, 6.3_
   
-  - [ ] 15.3 Create E2E tests for critical user flows
+  - [x] 15.3 Create E2E tests for critical user flows
+
+
     - Test login and logout flow
     - Test lead creation and editing
     - Test Kanban drag-and-drop
