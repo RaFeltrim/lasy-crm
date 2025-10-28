@@ -9,15 +9,15 @@ export type InteractionType = 'call' | 'email' | 'meeting' | 'note' | 'other';
 
 export interface Lead {
   id: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
   name: string;
   email: string | null;
   phone: string | null;
   company: string | null;
   status: LeadStatus;
   notes: string | null;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
 }
 
 export interface Interaction {
@@ -37,24 +37,88 @@ export type InteractionInsert = Omit<Interaction, 'id' | 'created_at'>;
 // Update types (all fields optional except id)
 export type LeadUpdate = Partial<Omit<Lead, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;
 
-export type InteractionUpdate = Partial<Omit<Interaction, 'id' | 'created_at' | 'user_id'>> & {
-  id: string;
-};
+export type InteractionUpdate = Partial<Omit<Interaction, 'id' | 'created_at' | 'user_id'>>;
 
 // Database schema type for Supabase client
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       leads: {
-        Row: Lead;
-        Insert: Omit<Lead, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Lead, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;
+        Row: {
+          id: string;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+          name: string;
+          email: string | null;
+          phone: string | null;
+          company: string | null;
+          status: LeadStatus;
+          notes: string | null;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          user_id: string;
+          name: string;
+          email?: string | null;
+          phone?: string | null;
+          company?: string | null;
+          status?: LeadStatus;
+          notes?: string | null;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          user_id?: string;
+          name?: string;
+          email?: string | null;
+          phone?: string | null;
+          company?: string | null;
+          status?: LeadStatus;
+          notes?: string | null;
+        };
       };
       interactions: {
-        Row: Interaction;
-        Insert: Omit<Interaction, 'id' | 'created_at'>;
-        Update: Partial<Omit<Interaction, 'id' | 'created_at' | 'user_id'>>;
+        Row: {
+          id: string;
+          lead_id: string;
+          type: InteractionType;
+          description: string;
+          created_at: string;
+          user_id: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          type: InteractionType;
+          description: string;
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          id?: string;
+          lead_id?: string;
+          type?: InteractionType;
+          description?: string;
+          created_at?: string;
+          user_id?: string;
+        };
       };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }

@@ -70,24 +70,15 @@ export async function PATCH(
     const supabase = createServerSupabaseClient(request);
     
     // Build update object with only provided fields
-    type LeadUpdate = {
-      name?: string;
-      email?: string | null;
-      phone?: string | null;
-      company?: string | null;
-      status?: string;
-      notes?: string | null;
-    };
-    
-    const updateData: LeadUpdate = {};
+    const updateData: Database['public']['Tables']['leads']['Update'] = {};
     if (sanitizedData.name !== undefined) updateData.name = sanitizedData.name;
-    if (sanitizedData.email !== undefined) updateData.email = sanitizedData.email;
-    if (sanitizedData.phone !== undefined) updateData.phone = sanitizedData.phone;
-    if (sanitizedData.company !== undefined) updateData.company = sanitizedData.company;
+    if (sanitizedData.email !== undefined) updateData.email = sanitizedData.email || null;
+    if (sanitizedData.phone !== undefined) updateData.phone = sanitizedData.phone || null;
+    if (sanitizedData.company !== undefined) updateData.company = sanitizedData.company || null;
     if (sanitizedData.status !== undefined) updateData.status = sanitizedData.status;
-    if (sanitizedData.notes !== undefined) updateData.notes = sanitizedData.notes;
+    if (sanitizedData.notes !== undefined) updateData.notes = sanitizedData.notes || null;
 
-    const { data: lead, error } = await (supabase as any)
+    const { data: lead, error } = await supabase
       .from('leads')
       .update(updateData)
       .eq('id', params.id)

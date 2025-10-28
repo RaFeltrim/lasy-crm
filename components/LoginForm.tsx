@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/useToast'
+import Link from 'next/link'
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>
@@ -90,6 +91,13 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
+
+          <div className="text-center text-sm text-muted-foreground">
+            Don't have an account?{' '}
+            <Link href="/register" className="text-primary hover:underline">
+              Sign up
+            </Link>
+          </div>
         </form>
       </CardContent>
     </Card>

@@ -1,24 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Database } from '@/types/database';
+import { cookies } from 'next/headers';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import type { Database } from '@/types/database';
 import { AppError, AuthenticationError, ErrorResponse, logError, ErrorContext } from './errors';
 import { checkRateLimit, getClientIdentifier, getIpAddress, RateLimitConfig, RateLimitResult } from './rate-limit';
 
 /**
  * Create a Supabase client for API routes with the user's session
  */
-export function createServerSupabaseClient(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  // Get the authorization header
-  const authHeader = request.headers.get('authorization');
+export function createServerSupabaseClient(request: NextRequest): ReturnType<typeof createServerClient<Database>> {
+  const cookieStore = cookies();
   
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: authHeader ? { authorization: authHeader } : {},
-    },
-  });
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set(name, value, options);
+          } catch (error) {
+            // Handle cookie error in middleware
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set(name, '', { ...options, maxAge: 0 });
+          } catch (error) {
+            // Handle cookie error in middleware
+          }
+        },
+      },
+    }
+  );
 }
 
 /**

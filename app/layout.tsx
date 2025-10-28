@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/components/AuthProvider"
 import { QueryProvider } from "@/components/QueryProvider"
+import { ThemeProvider } from "next-themes"
 import { Toaster } from "@/components/ui/sonner"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { WebVitals } from "@/components/WebVitals"
@@ -36,17 +37,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`dark ${inter.variable}`}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className={inter.className}>
-        <ErrorBoundary>
-          <QueryProvider>
-            <AuthProvider>
-              <WebVitals />
-              {children}
-              <Toaster />
-            </AuthProvider>
-          </QueryProvider>
-        </ErrorBoundary>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ErrorBoundary>
+            <QueryProvider>
+              <AuthProvider>
+                <WebVitals />
+                {children}
+                <Toaster />
+              </AuthProvider>
+            </QueryProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -11,13 +11,22 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
+      console.log('User detected, redirecting...', user)
       router.push('/')
+      router.refresh()
     }
   }, [user, router])
 
   const handleLogin = async (email: string, password: string) => {
-    await signIn(email, password)
-    router.push('/')
+    try {
+      await signIn(email, password)
+      console.log('Sign in successful, forcing redirect...')
+      // Force immediate redirect using window.location for reliability
+      window.location.href = '/dashboard'
+    } catch (error) {
+      console.error('Login error:', error)
+      throw error
+    }
   }
 
   return (

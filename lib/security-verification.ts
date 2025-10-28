@@ -3,7 +3,7 @@
  * This file contains helper functions to verify security implementations
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
 export interface SecurityTestResult {
@@ -23,7 +23,7 @@ export async function testLeadsRLS(
 ): Promise<SecurityTestResult[]> {
   const results: SecurityTestResult[] = [];
   
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase: SupabaseClient<Database> = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {
         Authorization: `Bearer ${userToken}`,
@@ -200,7 +200,7 @@ export async function testInteractionsRLS(
 ): Promise<SecurityTestResult[]> {
   const results: SecurityTestResult[] = [];
   
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase: SupabaseClient<Database> = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {
         Authorization: `Bearer ${userToken}`,
@@ -407,7 +407,7 @@ export async function testSessionManagement(
 ): Promise<SecurityTestResult[]> {
   const results: SecurityTestResult[] = [];
   
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase: SupabaseClient<Database> = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
   // Test 1: Valid credentials should create a session
   try {

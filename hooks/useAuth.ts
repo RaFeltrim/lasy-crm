@@ -40,9 +40,15 @@ export function useAuth() {
   const signIn = async (email: string, password: string) => {
     setState((prev) => ({ ...prev, loading: true }))
     try {
-      await authService.signIn(email, password)
-    } finally {
+      const { session, user } = await authService.signIn(email, password)
+      setState({
+        user: user,
+        session: session,
+        loading: false,
+      })
+    } catch (error) {
       setState((prev) => ({ ...prev, loading: false }))
+      throw error
     }
   }
 
