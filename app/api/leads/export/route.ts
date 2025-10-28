@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
       const xlsx = leadsToXLSX(leads || []);
       const filename = `leads-export-${timestamp}.xlsx`;
       
-      return new NextResponse(xlsx, {
+      return new NextResponse(xlsx as any, {
         status: 200,
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
