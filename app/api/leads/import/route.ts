@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     if (validLeads.length > 0) {
       const { data, error } = await supabase
         .from('leads')
-        .insert(validLeads)
+        .insert(validLeads as any)
         .select();
       
       if (error) {
